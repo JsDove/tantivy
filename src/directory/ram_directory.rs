@@ -13,7 +13,7 @@ use crate::directory::{
     AntiCallToken, Directory, FileSlice, TerminatingWrite, WatchCallback, WatchCallbackList,
     WatchHandle, WritePtr,
 };
-
+use std::backtrace::Backtrace;
 /// Writer associated with the [`RamDirectory`].
 ///
 /// The Writer just writes a buffer.
@@ -122,6 +122,16 @@ impl fmt::Debug for RamDirectory {
 pub struct RamDirectory {
     fs: Arc<RwLock<InnerDirectory>>,
 }
+impl Drop for RamDirectory {
+    fn drop(&mut self) {
+        let bt = Backtrace::capture();
+        let current_ref_count = Arc::strong_count(&self.fs);
+        info!(
+            "RamDirectory with is being dropped. Current RefCount {} Backtrace: {:?}",
+            current_ref_count, bt
+        )
+    }
+} 
 
 impl RamDirectory {
     /// Constructor
